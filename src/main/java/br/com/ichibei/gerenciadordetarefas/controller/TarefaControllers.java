@@ -47,33 +47,30 @@ public class TarefaControllers {
 
     @GetMapping ("/{id}")
 
-    public ResponseEntity<TarefaEntities> buscar (@PathVariable Long id) {
-        return tarefaServices.buscarTarefas(id)
-        .map(ResponseEntity::ok)  // Se encontrado, retorna 200 OK
-		            .orElseGet(() -> ResponseEntity.notFound().build());  // Se não encontrado, retorna 404 Not Found
+    public ResponseEntity<Optional<TarefaEntities>> buscar(@PathVariable Long id) {
+		Optional<TarefaEntities> tarefa = tarefaServices.buscarTarefas(id);
+		return ResponseEntity.ok(tarefa); 
     }
 
     @PutMapping ("/{id}")
 	
-	public ResponseEntity<TarefaEntities> atualizar (@PathVariable Long id, @RequestBody TarefaEntities tarefaEntities) {
-		return tarefaServices.buscarTarefas(id)
-	            .map(existingTarefa -> {
-	                tarefaEntities.setId(id);
-	                TarefaEntities tarefaAtualizada = tarefaServices.salvarTarefas(tarefaEntities);
-	                return ResponseEntity.ok(tarefaAtualizada);  // Retorna 200 OK com a tarefa atualizada
-	            })
-	            .orElseGet(() -> ResponseEntity.notFound().build());  // Retorna 404 Not Found se a tarefa não existir
-	}
+	
+	public ResponseEntity<TarefaEntities> atualizar(@PathVariable Long id, @RequestBody TarefaEntities tarefaEntities) {
+    	Optional<TarefaEntities> existingTarefa = tarefaServices.buscarTarefas(id); // Se não existir, já lança exceção
+    	tarefaEntities.setId(id);
+    	TarefaEntities tarefaAtualizada = tarefaServices.salvarTarefas(tarefaEntities);
+    	return ResponseEntity.ok(tarefaAtualizada);
+}
+
 	
 	@DeleteMapping ("/{id}")
 	 
-	public ResponseEntity<Void> deletar (@PathVariable Long id) {
-		Optional<TarefaEntities> tarefaExistente = tarefaServices.buscarTarefas(id);
-		if (tarefaExistente.isPresent()) {
-			tarefaServices.deletarTarefas(id);
-			return new ResponseEntity<> (HttpStatus.NO_CONTENT); //se existir a tarefa vai ser excluida e retorna 204
-		}
-		return new ResponseEntity<> (HttpStatus.NOT_FOUND); // se não existir a tarefa retorna o erro 404
-	}
+	
+	public ResponseEntity<Void> deletar(@PathVariable Long id) {
+    	tarefaServices.buscarTarefas(id); // Se não encontrar, já lança exceção
+    	tarefaServices.deletarTarefas(id);
+    	return ResponseEntity.noContent().build();
+}
+
     
 }
